@@ -7,7 +7,7 @@ A quick and dirty implementation of colored eyecandy for console debug printouts
 
 Just `require "debugcandy.lua"` and start using it with: 
 
-`_c_debug(msg,level)`\
+`_c_debug(msg,level)` -- this will print a table with extra data per the above screenshot\
 `_c_error(msg,level)`\
 `_c_warn(msg,level)`\
 `_c_stop(msg,level)`\
