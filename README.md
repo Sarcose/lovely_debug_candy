@@ -1,6 +1,7 @@
 A quick and dirty implementation of colored eyecandy for console debug printouts, with errors, warnings, debug messages, and a todo list if that interests you. Uses a pseudonamespace of `_c_` because that's what works personally for me. Feel free to modify that.
 
 ![image](https://github.com/user-attachments/assets/c2c99982-5303-443e-a5aa-b1f325de16e4)
+![image](https://github.com/user-attachments/assets/5a068403-bc6d-437d-b326-d2fc8136b0ee)
 
 
 
