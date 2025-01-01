@@ -151,7 +151,7 @@ function _c_debug(_,level) -- print magenta to console, takes a string or table.
 	if DEBUGMODE then
 		local p = getCallLine("DEBUG",level)
 		if type(_) ~= "table" then 
-			p = p .._
+			p = p ..inspect(_)
 		else
 			local longestname = 0
 			local refs = {}
