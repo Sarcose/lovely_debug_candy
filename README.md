@@ -14,6 +14,7 @@ There are three globals *I* personally use in this implementation. As-is they ar
 `DEBUGBASELEVEL = 2` : sets the base level of stacktrace to be printed. By stacktrace I mean the following example: 
  * `[assets.lua:38][main.lua:10]`
  * Higher levels go back more files.
+   
 `TODOEXPIRATION = 5` : number of days before a Todo list shows a warning that it hasn't been touched. Starts yellow, then at `TODOEXPIRATION*3` becomes red. Date is passed as `t[1]` in the format of `"12/31/2024"`
 
 For further explanations see the comments in `debugcandy.lua` 
