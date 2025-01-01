@@ -62,7 +62,7 @@ function _c_debug(_,level) -- print magenta to console, takes a string or table.
 		if #_ <= 0 then	--we're trying to print out a table, shallowly
 			p = p.."\r\n"
 			for k,v in pairs(_) do
-				p = p..k..": "..tostring(_[i]).."\r\n"
+				p = p..k..": "..tostring(_[v]).."\r\n"
 			end
 		else
 			for i=1, #_ do
