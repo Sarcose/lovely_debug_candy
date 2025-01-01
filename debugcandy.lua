@@ -14,8 +14,7 @@
 _G.DEBUGMODE = true
 _G.DEBUGBASELEVEL = 2   --for _c_ console print functions, this usually means [callingfile.lua:line][datafile.lua:line]
 _G.TODOEXPIRATION = 5
-
---[[ my personal choices
+--[[
 	yellow: Warning
 	red:	Error
 	green:	Success
@@ -101,10 +100,7 @@ local function inspect(i, refs)
 		--t = string.gsub(t,"table","t")
 		ret = ret.."[ addr:"..tostring(addr)
 		local ind, key
-		if #i > 0 then
-			ind = true
-			ret = ret .. "   indices:"..#i
-		end
+		if #i > 0 then ind = true end
 		local n = 0
 		local deep = 1
 		local deepest = 1
@@ -121,16 +117,20 @@ local function inspect(i, refs)
 			if deepest > deep then deep = deepest end
 			d = 0
 		end
-
-		if n > 0 then key = true ret = ret .. "   keys:"..n end
-		if not ind and not key then
-			ret = ret .. "   (Empty Table)"
-		else
+		local keys = ""
+		if n > 0 then 
+			key = true 
+			keys = "   keys:"..n 
+		end
+		if key or ind then
+			ret = ret .. "   #len:"..#i..keys
 			if deep >= limit then
-				ret = ret .. "   deep: >"..tostring(deep).." [PROBABLE RECURSION]"
+				ret = ret .. "   depth: > LIMIT ("..tostring(limit)..")"
 			elseif deep > 1 then
-				ret = ret .. "   deep:"..tostring(deep)
+				ret = ret .. "   depth:"..tostring(deep)
 			end
+		else
+			ret = ret .. "   <empty>"
 		end
 		ret = ret .. " ]"
 	elseif type(i) == "function" then
