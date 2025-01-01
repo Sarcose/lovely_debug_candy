@@ -55,26 +55,127 @@ local function getCallLine(n,level)
 	local line = extractCallerInfo(level)
 	return n.." "..line..": "
 end
+local limit = 9--to avoid infinite recursion
+local function getDeepest(t, refs, deep)
+	deep = deep or 1
+	if deep >= limit then deep = limit return deep, refs end
+	refs = refs or {}
+	refs[tostring(t)] = true
+	local deepest = 1
+	local d = 0
+	for k,v in pairs(t) do
+		if type(v) == "table" then
+			--first, determine if it's a self reference
+			if not refs[tostring(v)] then
+				refs[tostring(v)] = true
+				d, refs = getDeepest(v, refs, deepest)
+				deepest = deepest + d
+			end
+			if deepest > deep then deep = deepest end
+			if deep >= limit then deep = limit break end
+			d = 0
+		end
+	end
+	--_c_debug("refs: "..tostring(refs),0)
+	return deep, refs
+end
+
+local function getSpacing(space, name)
+	space = space or 9 --the size of a type label
+	name = tostring(name)
+	local spaces = ""
+	local diff = space - #name
+	for i = 1, diff do
+		spaces = spaces.." "
+	end
+	return spaces
+end
+local function inspect(i, refs)
+	local t = type(i)
+	t = "("..t..")"
+	local ret = ""
+	local symbol = "= "
+	if type(i) == "table" then
+		symbol = ""
+		local addr = string.gsub(tostring(i),"table: ","")
+		--t = string.gsub(t,"table","t")
+		ret = ret.."[ addr:"..tostring(addr)
+		local ind, key
+		if #i > 0 then
+			ind = true
+			ret = ret .. "   indices:"..#i
+		end
+		local n = 0
+		local deep = 1
+		local deepest = 1
+		local d = 0
+		refs = refs or {}
+		refs[tostring(i)] = true
+		for k,v in pairs(i) do
+			deepest = 1
+			if not tonumber(k) then n = n + 1 end
+			if type(v) == "table" then
+				d, refs = getDeepest(v, refs)
+				deepest = deepest + d
+			end
+			if deepest > deep then deep = deepest end
+			d = 0
+		end
+
+		if n > 0 then key = true ret = ret .. "   keys:"..n end
+		if not ind and not key then
+			ret = ret .. "   (Empty Table)"
+		else
+			if deep >= limit then
+				ret = ret .. "   deep: >"..tostring(deep).." [PROBABLE RECURSION]"
+			elseif deep > 1 then
+				ret = ret .. "   deep:"..tostring(deep)
+			end
+		end
+		ret = ret .. " ]"
+	elseif type(i) == "function" then
+		t = "(fn)"
+		ret = string.gsub(tostring(i),"function: ","")
+		ret = "addr:"..ret
+		symbol = "  "
+
+	else
+		ret = tostring(i)
+		if type(i) == "string" then
+			ret = '"'..ret..'"'
+		end
+	end
+	return t..getSpacing(nil,t)..symbol..ret
+end
 function _c_debug(_,level) -- print magenta to console, takes a string or table. Only when DEBUGMODE is on.
 	if DEBUGMODE then
-		if type(_) ~= "table" then _ = {tostring(_)} end
 		local p = getCallLine("DEBUG",level)
-		if #_ <= 0 then	--we're trying to print out a table, shallowly
-			p = p.."\r\n"
-			for k,v in pairs(_) do
-				p = p..k..": "..tostring(v).."\r\n"
-			end
+		if type(_) ~= "table" then 
+			p = p .._
 		else
+			local longestname = 0
+			local refs = {}
+			refs[tostring(_)] = true
+			for k,v in pairs(_) do
+				if type(k) == "string" then
+					if #k > longestname then longestname = #k end
+				end
+			end
 			for i=1, #_ do
-				p = p..tostring(_[i])
-				if i < #_ then
-					p = p..", "
+				p = p.."\r\n  "
+				p = p..getSpacing(longestname,i)..tostring(i).." : "..inspect(_[i], refs)
+			end
+			for k,v in pairs(_) do
+				if not tonumber(k) then
+					p = p.."\r\n  "
+					p = p..getSpacing(longestname,k)..k.." : "..inspect(v, refs)
 				end
 			end
 		end
 		printC("blue",p)
 	end
 end
+
 local function checkChecked(s)
     if string.sub(s, 1, 1) == "X" then
         -- Return the string without the "X" and true (indicating it started with "X")
@@ -194,10 +295,10 @@ end
 function printC(colour, ...)
 	if not consolecolors[colour] then error("Undefined colour: " .. colour) end
 	io.write(consolecolors[colour])
+	if colour == "blue" then io.write("\x1b[1m") end
 	print(...)
 	io.write(consolecolors.reset)
 end
-
 --example implementation:
 _c_todo{"11/31/2024","XChecked Option 1","Unchecked Option 2"}
 _c_debug("debug message here",2)
