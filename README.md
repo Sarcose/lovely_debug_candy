@@ -6,7 +6,7 @@ Just `require "debugcandy.lua"` and start using it with:
 `_c_error(msg,level)`\
 `_c_warn(msg,level)`\
 `_c_stop(msg,level)`\
-`_c_todo{"12/31/2024","XChecked Option","Unchecked Option"}`\
+`_c_todo{"12/31/2024","XChecked Option","Unchecked Option"}`
 
 There are three globals *I* personally use in this implementation. As-is they are needed to run but they are declared in the file. Feel free to tinker with this and remove those calls if need be:
 
