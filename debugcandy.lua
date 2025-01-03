@@ -1,26 +1,16 @@
---quickly thrown together from my unorganized utility.lua
+CANDYDEBUGMODE = true
+CANDYDEBUGBASELEVEL = 2   --for ccandy. console print functions, this usually means [callingfile.lua:line][datafile.lua:line]
+CANDYTODOEXPIRATION = 5
 --[[
-  uses a _c_ pseudonamespace, thrown into global, for colored console printing:
-  _c_debug(str,level)  -- a string or a table of strings all printed one after another, level is the number of files back you want it to print in the trace. uses a default
-  _c_warn, _c_error, _c_stop all use the same format. 
-            I tend to use level 2-3 for _c_warn and _c_error because those come from data and i might need the files further up
-            I usually use 1-2 for _c_debug because that's related to more immediate work I'm doing
-  _c_todo{} just takes a table, it defaults to level 1. I use this because it's very in-my-face and serves as a reminder what I'm doing if I take a long break.
-        --It parses t[1] as the date in format of "12/31/2024" or "12/31" and will supply a warning if the todolist hasn't been touched in a long time.
-        --if the first option isn't in date format it'll just ignore that feature
-        --it parses an X at the beginning of an item as a checked off option, and puts a [ ] or [X] conditionally.
---]]
-
-_G.DEBUGMODE = true
-_G.DEBUGBASELEVEL = 2   --for _c_ console print functions, this usually means [callingfile.lua:line][datafile.lua:line]
-_G.TODOEXPIRATION = 5
---[[
-	yellow: Warning
+	yellow: Warning | Reminder
 	red:	Error
 	green:	Success
 	blue: 	Debug
 	cyan:	Todo
 --]]
+
+local ccandy = {}
+
 local function extractCallerInfo(level)
     local stack = debug.traceback("", 2)
     local lines = {}
@@ -33,7 +23,7 @@ local function extractCallerInfo(level)
 		for i=1, level do
 			local n = (i-1)+parseStart
 			local num
-			local callerInfo = lines[n] -- lines[4] is the filename of the debug call, abstracted through this->getCallLine->_c_debug()
+			local callerInfo = lines[n] -- lines[4] is the filename of the debug call, abstracted through this->getCallLine->ccandy.debug()
 			if callerInfo then
 				local file, line = callerInfo:match("([^:]+):(%d+)")
 				if file and line then
@@ -50,7 +40,7 @@ local function extractCallerInfo(level)
     return ret
 end
 local function getCallLine(n,level)
-	level = level or DEBUGBASELEVEL
+	level = level or CANDYDEBUGBASELEVEL
 	local line = extractCallerInfo(level)
 	return n.." "..line..": "
 end
@@ -75,10 +65,9 @@ local function getDeepest(t, refs, deep)
 			d = 0
 		end
 	end
-	--_c_debug("refs: "..tostring(refs),0)
+	--ccandy.debug("refs: "..tostring(refs),0)
 	return deep, refs
 end
-
 local function getSpacing(space, name)
 	space = space or 9 --the size of a type label
 	name = tostring(name)
@@ -147,12 +136,20 @@ local function inspect(i, refs)
 	end
 	return t..getSpacing(nil,t)..symbol..ret
 end
-function _c_debug(_,level) -- print magenta to console, takes a string or table. Only when DEBUGMODE is on.
-	if DEBUGMODE then
+function ccandy.debug(_,level) -- print magenta to console, takes a string or table. Only when CANDYDEBUGMODE is on.
+	if CANDYDEBUGMODE then
 		local p = getCallLine("DEBUG",level)
 		if type(_) ~= "table" then 
-			p = p ..inspect(_)
+			if type(_) == "string" then
+				p = p .. _		--if it's a string we don't bother with the inspection, just print it as a message
+			else
+				p = p ..inspect(_)
+			end
 		else
+			local cap = "\r\n  "
+			if _.horizontal then 
+				cap = "|" _.horizontal = nil 
+			end
 			local longestname = 0
 			local refs = {}
 			refs[tostring(_)] = true
@@ -162,24 +159,26 @@ function _c_debug(_,level) -- print magenta to console, takes a string or table.
 				end
 			end
 			for i=1, #_ do
-				p = p.."\r\n  "
+				p = p..cap
 				p = p..getSpacing(longestname,i)..tostring(i).." : "..inspect(_[i], refs)
 			end
 			for k,v in pairs(_) do
 				if not tonumber(k) then
-					p = p.."\r\n  "
+					p = p..cap
 					p = p..getSpacing(longestname,k)..k.." : "..inspect(v, refs)
 				end
 			end
+			p = p:match("^(.-)[,\r\n]?$")
 		end
-		printC("blue",p)
+		ccandy.printC("blue",p)
 	end
 end
+
 
 local function checkChecked(s)
     if string.sub(s, 1, 1) == "X" then
         -- Return the string without the "X" and true (indicating it started with "X")
-        return string.sub(s, 2), true
+        return string.gsub(s,"X",""), true
     else
         -- Return the original string and false (indicating no leading "X")
         return s, false
@@ -209,9 +208,10 @@ local function compareDate(inputString)
     local daysPassed = math.floor(secondsPassed / (24 * 60 * 60)) -- Convert seconds to days
     return true, daysPassed
 end
-function _c_todo(_) --_c_todo{"Update date","XChecked Step 1","Unchecked Step 2","Unchecked Step 3"}
+local todotab = "   "
+function ccandy.todo(_) --ccandy.todo{"Update date","XChecked Step 1","Unchecked Step 2","Unchecked Step 3"}
 	local level = 1
-	if DEBUGMODE then
+	if CANDYDEBUGMODE then
 		if type(_) ~= "table" then _ = {tostring(_)} end
 		local p1 = getCallLine("TODO",level)
 		local p2 = nil
@@ -225,7 +225,7 @@ function _c_todo(_) --_c_todo{"Update date","XChecked Step 1","Unchecked Step 2"
 			local date, timePassed = compareDate(item)
 			if date then
 				exTimePassed = timePassed
-				if timePassed >= TODOEXPIRATION then
+				if timePassed >= CANDYTODOEXPIRATION then
 					p2 = "     WARNING: "..tostring(timePassed).." days since this Todo list was updated!"
 				end
 			else
@@ -235,7 +235,13 @@ function _c_todo(_) --_c_todo{"Update date","XChecked Step 1","Unchecked Step 2"
 				else
 					checkbox = unchecked
 				end
-				p3 = p3.."     "..checkbox..s
+
+				local _s, count = string.gsub(s,"*","")
+				local tab = ""
+				for i=1, count do
+					tab = tab..todotab
+				end
+				p3 = p3.."  "..tab..checkbox.._s
 				if i < #_ then
 					p3 = p3.."\r\n"
 				end
@@ -243,31 +249,77 @@ function _c_todo(_) --_c_todo{"Update date","XChecked Step 1","Unchecked Step 2"
 		end
 		local warncolor = nil
 		if exTimePassed then
-			if exTimePassed >= (TODOEXPIRATION * 3) then
+			if exTimePassed >= (CANDYTODOEXPIRATION * 3) then
 				warncolor = "red"
-			elseif exTimePassed >= TODOEXPIRATION then
+			elseif exTimePassed >= CANDYTODOEXPIRATION then
 				warncolor = "yellow"
 			end
 		end
-		printCTable({"cyan",warncolor,"cyan"},{p1,p2,p3})
+		ccandy.printCTable({"cyan",warncolor,"cyan"},{p1,p2,p3})
 	end
 end
-function _c_warn(_,level) --print yellow to console, takes a string or table
+function ccandy.remind(setdate,reminderdate,_)
+	if CANDYDEBUGMODE then
+		local date, timePassedSinceSet = compareDate(setdate)
+		assert(date,"ccandy.reminder called without setdate!")
+		date, timePassedSinceReminder = compareDate(reminderdate)
+		assert(date,"ccandy.reminder called without reminderdate!")
+		if timePassedSinceReminder < 0 then
+			local heading = "==========!!!=======REMINDER=======!!!========"
+			local since = "A reminder was set on "..setdate.." "..timePassedSinceSet.." days ago!"
+			local reminder = ""
+			local post = "=========!!!=======================!!!========"
+			if type(_) == "table" then
+				for i,v in ipairs(_) do
+					if type(v)=="string" then
+						reminder = reminder..v
+						if i < #_ then
+							reminder = reminder.."\r\n"
+						end
+					end
+				end
+			else
+				reminder = reminder.._
+			end
+			ccandy.printCTable("yellow",{heading,since,reminder})
+			for k,v in pairs(_) do
+				if type(v) == "function" then
+					_[k]()
+				end
+			end
+			ccandy.printC("yellow",post)
+		end
+	end
+end
+
+function ccandy.success(_,level) --print green to console, takes a string or table
+	level = level or 0	--success uses its own default, 0, because that makes sense to me
     if type(_) ~= "table" then _ = {_} end
-	local p = getCallLine("WARN",level)
+	local p = getCallLine("SUCCESS!",level)
 	for i=1, #_ do
 		p = p..tostring(_[i])
 		if i < #_ then
 			p = p..", "
 		end
     end
-    printC("yellow",p)
+    ccandy.printC("green",p)
 end
-function _c_stoperror(_,level) --print red to console then stop the program
-	_c_error(_,level)
+function ccandy.warn(_,level) --print yellow to console, takes a string or table
+    if type(_) ~= "table" then _ = {_} end
+	local p = getCallLine("WARNING",level)
+	for i=1, #_ do
+		p = p..tostring(_[i])
+		if i < #_ then
+			p = p..", "
+		end
+    end
+    ccandy.printC("yellow",p)
+end
+function ccandy.stop(_,level) --print red to console then stop the program
+	ccandy.error(_,level)
 	error("See console output. Stacktrace:")
 end
-function _c_error(_,level) --print red to console, takes a string or table
+function ccandy.error(_,level) --print red to console, takes a string or table
     if type(_) ~= "table" then _ = {_} end
     local p = getCallLine("ERROR",level)
     for i=1, #_ do
@@ -276,30 +328,52 @@ function _c_error(_,level) --print red to console, takes a string or table
 			p = p..", "
 		end
     end
-    printC("red",p)
+    ccandy.printC("red",p)
 end
 local consolecolors = 
 {reset = "\x1B[m", red = "\x1B[31m", 		--red: error
 yellow = "\x1b[33m", green = "\x1B[32m", 	--yellow: warn (looks orange)  green: good stuff like "finished loading!" probably
 blue = "\x1b[34m", cyan = "\x1b[36m"}		--blue: debug messages		cyan: TODO
-function printCTable(cTable, sTable)	--print a table of strings with a table of colors, used in Todo list mainly
-	for i=1, #sTable do
-		local s = sTable[i]
-		if s then
-			local c = cTable[i]
-			c = c or "reset"
-			printC(c,s)
-		end
-	end
-end
-function printC(colour, ...)
+function ccandy.printC(colour, ...)
 	if not consolecolors[colour] then error("Undefined colour: " .. colour) end
 	io.write(consolecolors[colour])
 	if colour == "blue" then io.write("\x1b[1m") end
 	print(...)
 	io.write(consolecolors.reset)
 end
---example implementation:
-_c_todo{"11/31/2024","XChecked Option 1","Unchecked Option 2"}
-_c_debug("debug message here",2)
-_c_warn{"a bunch of things","stuff","and","other stuff"}
+function ccandy.blank(msg,n)
+	if type(msg) == "number" then n = msg; msg = nil end
+	n = n or 10
+	local p = ""
+	for i=1,n do
+		p = p .. "\r\n"
+	end
+	if msg then printC("green",tostring(msg)) end
+	print(p)
+end
+function ccandy.printCTable(cTable, sTable)	--print a table of strings with a table of colors, used in Todo list mainly
+	local onlyColor
+	if type(cTable) ~= "table" then onlyColor = cTable end
+	for i=1, #sTable do
+		local s = sTable[i]
+		if s then
+			local c = onlyColor or cTable[i]
+			c = c or "reset"
+			ccandy.printC(c,s)
+		end
+	end
+end
+
+function ccandy:export(n)
+	n = n or "_c_"
+	local ignore = {"export","printC","printCTable"}
+	n = n or ""
+	for k,v in pairs(self) do
+		local f = n..k
+		_G[f] = v
+	end
+	_G.printC = self.printC
+	_G.printCTable = self.printCTable
+end
+
+return ccandy
