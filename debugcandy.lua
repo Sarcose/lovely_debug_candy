@@ -266,7 +266,7 @@ function ccandy.remind(setdate,reminderdate,_)
 		assert(date,"ccandy.reminder called without setdate!")
 		date, timePassedSinceReminder = compareDate(reminderdate)
 		assert(date,"ccandy.reminder called without reminderdate!")
-		if timePassedSinceReminder < 0 then
+		if timePassedSinceReminder > 0 then
 			local heading = ccandy.reminderheader
 			local since = "A reminder was set on "..setdate.." "..timePassedSinceSet.." days ago!"
 			local reminder = ""
