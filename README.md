@@ -1,7 +1,9 @@
 ## Debug Candy!
 
 A fun little implementation of some debug tools I like to use, now in convenient library form!\
+
 `require "debugcandy.lua"` will put the `ccandy` namespace into Global, putting all tools there. \
+
 `require ("path.debugcandy.lua"):export(n)` will export all of the functions into the Global namespace with the optional `n` prefix. Leaving `n` blank will put the prefix `_c_` which this library originally used by default (and what I use). Exporting these functions into the Global namespace without a prefix is a Bad Idea since some of them share names with common Lua/Love functions.\
 
 
