@@ -5,7 +5,7 @@ A fun little implementation of some debug tools I like to use, now in convenient
 * `require "debugcandy.lua"` will put the `ccandy` namespace into Global, putting all tools there. 
 * `require ("path.debugcandy.lua"):export(n)` will export all of the functions into the Global namespace with the optional `n` prefix.
 * Leaving `n` blank will use the prefix `_c_` to avoid overwriting common Lua and Love names like `error`
-* 
+
 <img src="https://github.com/user-attachments/assets/7f4d1d7c-2143-414e-9012-73be4e7dd330" width="600">
 
 `debug()`,`error()`, `warn()`, and `success()` all print the passed message (including if it's a table, which they will iterate and print), and trace back the command call for as many levels as `level` is passed.
@@ -18,6 +18,9 @@ The global constants used are:
   More info on each function:
 
   * `debug(msg,level)` - Prits blue to the console. Will print variable types and values of every item in the msg table (or just the msg variable if it's not a table), and if it finds a table nested it will print how many keys, indices, the memory address, and how deep the table goes (with limited functionality to avoid recursion - I'm still figuring that part out). All formatted to (mostly) line up neatly.
+  * An example of `debug()` printing a table:
+   <img src="https://github.com/user-attachments/assets/f927ca5b-0b22-4c09-9368-cd121e352f51" width="400">
+
   * `warn(msg,level)` - Prints yellow to the console
   * `error(msg,level)` - Prints red to the console.
   * `stop(msg,level)` - Calls `ccandy.error(msg,level)` and then uses Love's inbuilt `error()` to stop the game completely. Lets you stop the program with a little more detailed readout.
