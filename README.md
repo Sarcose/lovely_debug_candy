@@ -1,3 +1,5 @@
+## Debug Candy!
+
 A fun little implementation of some debug tools I like to use, now in convenient library form!
 `require "debugcandy.lua"` will put the `ccandy` namespace into Global, putting all tools there. 
 `require ("path.debugcandy.lua"):export(n)` will export all of the functions into the Global namespace with the optional `n` prefix. Leaving `n` blank will put the prefix `_c_` which this library originally used by default (and what I use). Exporting these functions into the Global namespace without a prefix is a Bad Idea since some of them share names with common Lua/Love functions.
@@ -39,3 +41,8 @@ _c_blank(0)
 _c_success()
 _c_blank("Also I thought it'd be nice to be able to blank the console (blank(n) just prints n or 10 blank lines")
 ```
+
+
+## Customizing
+For now, only the header and footer of `remind()` can be edited but I'm working on getting it to the point where the colors can be picked. 
+`ccandy.reminderheader` and `ccandy.reminderfooter` are those variables. Leave them alone and they'll look like the screenshot.
