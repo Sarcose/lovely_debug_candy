@@ -258,6 +258,8 @@ function ccandy.todo(_) --ccandy.todo{"Update date","XChecked Step 1","Unchecked
 		ccandy.printCTable({"cyan",warncolor,"cyan"},{p1,p2,p3})
 	end
 end
+ccandy.reminderheader = "==========!!!=======REMINDER=======!!!========"
+ccandy.reminderfooter = "=========!!!=======================!!!========"
 function ccandy.remind(setdate,reminderdate,_)
 	if CANDYDEBUGMODE then
 		local date, timePassedSinceSet = compareDate(setdate)
@@ -265,10 +267,10 @@ function ccandy.remind(setdate,reminderdate,_)
 		date, timePassedSinceReminder = compareDate(reminderdate)
 		assert(date,"ccandy.reminder called without reminderdate!")
 		if timePassedSinceReminder < 0 then
-			local heading = "==========!!!=======REMINDER=======!!!========"
+			local heading = ccandy.reminderheader
 			local since = "A reminder was set on "..setdate.." "..timePassedSinceSet.." days ago!"
 			local reminder = ""
-			local post = "=========!!!=======================!!!========"
+			local post = ccandy.reminderfooter
 			if type(_) == "table" then
 				for i,v in ipairs(_) do
 					if type(v)=="string" then
@@ -363,6 +365,7 @@ function ccandy.printCTable(cTable, sTable)	--print a table of strings with a ta
 		end
 	end
 end
+
 
 function ccandy:export(n)
 	n = n or "_c_"
