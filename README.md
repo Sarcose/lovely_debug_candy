@@ -5,9 +5,8 @@ A fun little implementation of some debug tools I like to use, now in convenient
 * `require "debugcandy.lua"` will put the `ccandy` namespace into Global, putting all tools there. 
 * `require ("path.debugcandy.lua"):export(n)` will export all of the functions into the Global namespace with the optional `n` prefix.
 * Leaving `n` blank will use the prefix `_c_` to avoid overwriting common Lua and Love names like `error`
-
-
-![image](https://github.com/user-attachments/assets/7f4d1d7c-2143-414e-9012-73be4e7dd330)
+* 
+<img src="https://github.com/user-attachments/assets/7f4d1d7c-2143-414e-9012-73be4e7dd330" width="600">
 
 `debug()`,`error()`, `warn()`, and `success()` all print the passed message (including if it's a table, which they will iterate and print), and trace back the command call for as many levels as `level` is passed.
 
